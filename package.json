@@ -1,0 +1,27 @@
+{
+  "name": "images-lambda",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node-lambda run",
+    "deploy": "node-lambda deploy",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/newspring/images-lambda.git"
+  },
+  "author": "johnthepink",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/newspring/images-lambda/issues"
+  },
+  "homepage": "https://github.com/newspring/images-lambda#readme",
+  "devDependencies": {
+    "node-lambda": "^0.8.6"
+  },
+  "dependencies": {
+    "imagemagick": "^0.1.3"
+  }
+}

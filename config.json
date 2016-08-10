@@ -1,0 +1,21 @@
+{
+  "bucket": "resizings",
+  "resizes": [
+    {
+      "size": 20,
+      "name": "xsmall"
+    },
+    {
+      "size": 100,
+      "name": "small"
+    },
+    {
+      "size": 600,
+      "name": "medium"
+    },
+    {
+      "size": 1080,
+      "name": "large"
+    }
+  ]
+}
