@@ -10,9 +10,9 @@ const s3 = new S3({ region: "us-east-1" });
 const downloadImage = (imageUrl) => (
   new Promise((resolve, reject) => {
     // create tmp directory
-    if (!fs.existsSync("./tmp")) fs.mkdirSync("./tmp");
+    if (!fs.existsSync("/tmp")) fs.mkdirSync("/tmp");
 
-    const tmpFileName = "./tmp/original.jpg";
+    const tmpFileName = "/tmp/original.jpg";
     const tmpFile = fs.createWriteStream(tmpFileName);
     httpsGet(imageUrl, (response) => {
       response.pipe(tmpFile);
@@ -37,7 +37,7 @@ const resizeImage = (srcPath, width, name) => (
   new Promise((resolve, reject) => {
     im.resize({
       srcPath,
-      dstPath: `./tmp/${name}.jpg`,
+      dstPath: `/tmp/${name}.jpg`,
       width,
     }, (err, stdout, stderr) => {
       if (err) {
@@ -56,7 +56,7 @@ const uploadImage = (image) => (
       Bucket: config.bucket,
       Key: `${image}.jpg`,
       ACL: "public-read",
-      Body: fs.readFileSync(`./tmp/${image}.jpg`),
+      Body: fs.readFileSync(`/tmp/${image}.jpg`),
     };
 
     s3.putObject(params, (error, data) => {
