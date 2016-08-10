@@ -14,10 +14,12 @@ const downloadImage = (imageUrl) => (
 
     const tmpFileName = "/tmp/original.jpg";
     const tmpFile = fs.createWriteStream(tmpFileName);
+    console.log("downloading");
     httpsGet(imageUrl, (response) => {
       response.pipe(tmpFile);
       tmpFile.on("finish", () => {
         tmpFile.close();
+        console.log("download finished");
         return resolve(tmpFileName);
       });
     }).on("error", (error) => {
