@@ -1,5 +1,3 @@
-const fs = require("fs");
-const httpsGet = require("https").get;
 const im = require("imagemagick");
 const S3 = require("aws-sdk").S3;
 
@@ -7,25 +5,15 @@ const config = require("./config");
 
 const s3 = new S3({ region: "us-east-1" });
 
-const downloadImage = (imageUrl) => (
+const downloadImage = (Bucket, Key) => (
   new Promise((resolve, reject) => {
-    // create tmp directory
-    if (!fs.existsSync("/tmp")) fs.mkdirSync("/tmp");
-
-    const tmpFileName = "/tmp/original.jpg";
-    const tmpFile = fs.createWriteStream(tmpFileName);
-    console.log("downloading");
-    httpsGet(imageUrl, (response) => {
-      response.pipe(tmpFile);
-      tmpFile.on("finish", () => {
-        tmpFile.close();
-        console.log("download finished");
-        console.log("exists", fs.existsSync(tmpFileName));
-        return resolve(tmpFileName);
-      });
-    }).on("error", (error) => {
-      console.log(error.message);
-      return reject();
+    console.log(`downloading ${Key} from ${Bucket}`);
+    s3.getObject({ Bucket, Key }, (error, data) => {
+      if (error) {
+        console.log(error);
+        return reject();
+      }
+      return resolve(data.Body);
     });
   })
 );
@@ -36,36 +24,32 @@ const generateImages = (originalImage) => (
   )))
 );
 
-const resizeImage = (srcPath, width, name) => (
+const resizeImage = (srcData, width, name) => (
   new Promise((resolve, reject) => {
     im.resize({
-      srcPath,
-      dstPath: `/tmp/${name}.jpg`,
+      srcData,
       width,
     }, (error, stdout, stderr) => {
-      if (error) {
-        console.log("error", error);
+      if (error || stderr) {
+        console.log("error", error || stderr);
         return reject();
       }
-      if (stdout) {
-        console.log("stdout", stdout);
-      }
-      if (stderr) {
-        console.log("stderr", stderr);
-      }
       console.log(`resized ${name}.jpg`);
-      return resolve();
+      return resolve({
+        name,
+        imageBuffer: new Buffer(stdout, "binary"),
+      });
     });
   })
 );
 
-const uploadImage = (image) => (
+const uploadImage = (name, imageBuffer) => (
   new Promise((resolve, reject) => {
     const params = {
       Bucket: config.bucket,
-      Key: `${image}.jpg`,
+      Key: `${name}.jpg`,
       ACL: "public-read",
-      Body: fs.readFileSync(`/tmp/${image}.jpg`),
+      Body: imageBuffer,
     };
 
     s3.putObject(params, (error, data) => {
@@ -73,24 +57,23 @@ const uploadImage = (image) => (
         console.log(error);
         return reject();
       }
-      console.log(`uploaded ${image}.jpg to ${config.bucket}`);
+      console.log(`uploaded ${name}.jpg to ${config.bucket}`);
       return resolve();
     });
   })
 );
 
-const uploadAllImages = () => (
-  Promise.all(config.resizes.map((resize) => (
-    uploadImage(resize.name)
+const uploadAllImages = (data) => (
+  Promise.all(data.map((image) => (
+    uploadImage(image.name, image.imageBuffer)
   )))
 );
 
 exports.handler = (event, context, callback) => {
-  console.log(event.image);
-  downloadImage(event.image)
+  downloadImage(event.sourceBucket, event.sourceKey)
     .then(image => generateImages(image))
-    .then(data => uploadAllImages())
-    .then(result => callback(null, "meow"))
+    .then(data => uploadAllImages(data))
+    .then(result => callback())
     .catch(error => console.log(error))
   ;
-}
+};
