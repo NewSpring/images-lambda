@@ -53,7 +53,7 @@ const resizeImage = (srcPath, width, name) => (
       if (stderr) {
         console.log("stderr", stderr);
       }
-      console.log("resized");
+      console.log(`resized ${name}.jpg`);
       return resolve();
     });
   })
