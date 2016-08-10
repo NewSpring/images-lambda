@@ -13,18 +13,21 @@ const downloadImage = (Bucket, Key) => (
         console.log(error);
         return reject();
       }
-      return resolve(data.Body);
+      return resolve({
+        key: Key,
+        buffer: data.Body,
+      });
     });
   })
 );
 
 const generateImages = (originalImage) => (
   Promise.all(config.resizes.map((resize) => (
-    resizeImage(originalImage, resize.size, resize.name)
+    resizeImage(originalImage.buffer, resize.size, resize.name, originalImage.key)
   )))
 );
 
-const resizeImage = (srcData, width, name) => (
+const resizeImage = (srcData, width, name, key) => (
   new Promise((resolve, reject) => {
     im.resize({
       srcData,
@@ -34,20 +37,30 @@ const resizeImage = (srcData, width, name) => (
         console.log("error", error || stderr);
         return reject();
       }
-      console.log(`resized ${name}.jpg`);
+      console.log(`resized ${name} ${key}.jpg`);
       return resolve({
         name,
+        key,
         imageBuffer: new Buffer(stdout, "binary"),
       });
     });
   })
 );
 
-const uploadImage = (name, imageBuffer) => (
+const uploadAllImages = (data) => (
+  Promise.all(data.map((image) => (
+    uploadImage(image.name, image.key, image.imageBuffer)
+  )))
+);
+
+const uploadImage = (name, key, imageBuffer) => (
   new Promise((resolve, reject) => {
+    const keyParts = key.split(".");
+    keyParts.splice(keyParts.length - 1, 0, name);
+    const newKey = keyParts.join(".");
     const params = {
       Bucket: config.bucket,
-      Key: `${name}.jpg`,
+      Key: newKey,
       ACL: "public-read",
       Body: imageBuffer,
     };
@@ -57,16 +70,10 @@ const uploadImage = (name, imageBuffer) => (
         console.log(error);
         return reject();
       }
-      console.log(`uploaded ${name}.jpg to ${config.bucket}`);
+      console.log(`uploaded ${newKey} to ${config.bucket}`);
       return resolve();
     });
   })
-);
-
-const uploadAllImages = (data) => (
-  Promise.all(data.map((image) => (
-    uploadImage(image.name, image.imageBuffer)
-  )))
 );
 
 exports.handler = (event, context, callback) => {
