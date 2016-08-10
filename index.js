@@ -20,6 +20,7 @@ const downloadImage = (imageUrl) => (
       tmpFile.on("finish", () => {
         tmpFile.close();
         console.log("download finished");
+        console.log("exists", fs.existsSync(tmpFileName));
         return resolve(tmpFileName);
       });
     }).on("error", (error) => {
@@ -41,10 +42,16 @@ const resizeImage = (srcPath, width, name) => (
       srcPath,
       dstPath: `/tmp/${name}.jpg`,
       width,
-    }, (err, stdout, stderr) => {
-      if (err) {
-        console.log(error);
+    }, (error, stdout, stderr) => {
+      if (error) {
+        console.log("error", error);
         return reject();
+      }
+      if (stdout) {
+        console.log("stdout", stdout);
+      }
+      if (stderr) {
+        console.log("stderr", stderr);
       }
       console.log("resized");
       return resolve();
