@@ -10,12 +10,16 @@
       "name": "small"
     },
     {
-      "size": 600,
+      "size": 500,
       "name": "medium"
     },
     {
-      "size": 1080,
+      "size": 1000,
       "name": "large"
+    },
+    {
+      "size": 2000,
+      "name": "xlarge"
     }
   ]
 }
