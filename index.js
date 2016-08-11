@@ -27,23 +27,49 @@ const generateImages = (originalImage) => (
   )))
 );
 
+const isPortrait = (srcData) => (
+  new Promise((resolve, reject) => {
+    im.identify({ data: srcData }, (error, features) => {
+      if (error) {
+        console.log(error);
+        reject();
+      }
+      console.log("height", features.height);
+      console.log("width", features.width);
+      const portrait = features.height > features.width;
+      console.log("isPortrait", portrait);
+      resolve(portrait);
+    });
+  })
+);
+
 const resizeImage = (srcData, width, name, key) => (
   new Promise((resolve, reject) => {
-    im.resize({
-      srcData,
-      width,
-    }, (error, stdout, stderr) => {
-      if (error || stderr) {
-        console.log("error", error || stderr);
-        return reject();
-      }
-      console.log(`resized ${name} ${key}.jpg`);
-      return resolve({
-        name,
-        key,
-        imageBuffer: new Buffer(stdout, "binary"),
+    const params = { srcData };
+
+    isPortrait(srcData)
+      .then((portrait) => {
+        if (portrait) {
+          params.height = width;
+        } else {
+          params.width = width;
+        }
+
+        im.resize(params, (error, stdout, stderr) => {
+          if (error || stderr) {
+            console.log("error", error || stderr);
+            return reject();
+          }
+          console.log(`resized ${name} ${key}.jpg`);
+          return resolve({
+            name,
+            key,
+            imageBuffer: new Buffer(stdout, "binary"),
+          });
+        });
+
       });
-    });
+
   })
 );
 
