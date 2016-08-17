@@ -60,7 +60,7 @@ const resizeImage = (srcData, width, name, key) => (
             console.log("error", error || stderr);
             return reject();
           }
-          console.log(`resized ${name} ${key}.jpg`);
+          console.log(`resized ${name} ${key}`);
           return resolve({
             name,
             key,
@@ -81,6 +81,7 @@ const uploadAllImages = (data) => (
 
 const uploadImage = (name, key, imageBuffer) => (
   new Promise((resolve, reject) => {
+    console.log(`splitting: ${key}`);
     const keyParts = key.split(".");
     keyParts.splice(keyParts.length - 1, 0, name);
     const newKey = keyParts.join(".");
@@ -103,7 +104,9 @@ const uploadImage = (name, key, imageBuffer) => (
 );
 
 exports.handler = (event, context, callback) => {
-  downloadImage(event.sourceBucket, event.sourceKey)
+  const sourceBucket = event.sourceBucket || event.Records[0].s3.bucket.name;
+  const sourceKey = event.sourceKey || event.Records[0].s3.object.key;
+  downloadImage(sourceBucket, sourceKey)
     .then(image => generateImages(image))
     .then(data => uploadAllImages(data))
     .then(result => callback())

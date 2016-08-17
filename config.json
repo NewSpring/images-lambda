@@ -16,10 +16,6 @@
     {
       "size": 1000,
       "name": "large"
-    },
-    {
-      "size": 2000,
-      "name": "xlarge"
     }
   ]
 }
