@@ -1,10 +1,14 @@
 const im = require("imagemagick");
 const S3 = require("aws-sdk").S3;
 
+// contains target S3 bucket, and what images should be generated
 const config = require("./config");
 
 const s3 = new S3({ region: "us-east-1" });
 
+// downloads the image.
+// the image is stored in-memory as a buffer
+// instead of writing to disk.
 const downloadImage = (Bucket, Key) => (
   new Promise((resolve, reject) => {
     console.log(`downloading ${Key} from ${Bucket}`);
@@ -21,12 +25,17 @@ const downloadImage = (Bucket, Key) => (
   })
 );
 
+// generates new images by iterating over the resizes
+// specified in the config.
 const generateImages = (originalImage) => (
   Promise.all(config.resizes.map((resize) => (
     resizeImage(originalImage.buffer, resize.size, resize.name, originalImage.key)
   )))
 );
 
+// determines if an image is portrait or not.
+// by default, the resized image is constrained based on width.
+// but, if it's taller than it is wide, height is used as the constraint.
 const isPortrait = (srcData) => (
   new Promise((resolve, reject) => {
     im.identify({ data: srcData }, (error, features) => {
@@ -43,6 +52,8 @@ const isPortrait = (srcData) => (
   })
 );
 
+// uses imagemagick to resize the image, and stores it
+// in-memory as a buffer
 const resizeImage = (srcData, width, name, key) => (
   new Promise((resolve, reject) => {
     const params = { srcData };
@@ -73,12 +84,15 @@ const resizeImage = (srcData, width, name, key) => (
   })
 );
 
+// iterates over all resized images and uploads them
 const uploadAllImages = (data) => (
   Promise.all(data.map((image) => (
     uploadImage(image.name, image.key, image.imageBuffer)
   )))
 );
 
+// generates the new file name for the image, and 
+// uploads it to the S3 bucket specified
 const uploadImage = (name, key, imageBuffer) => (
   new Promise((resolve, reject) => {
     console.log(`splitting: ${key}`);
@@ -103,6 +117,7 @@ const uploadImage = (name, key, imageBuffer) => (
   })
 );
 
+// function called by Lambda when triggered
 exports.handler = (event, context, callback) => {
   const sourceBucket = event.sourceBucket || event.Records[0].s3.bucket.name;
   const sourceKey = event.sourceKey || event.Records[0].s3.object.key;
