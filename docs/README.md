@@ -5,7 +5,7 @@ This project is used for taking an image that already exists in an AWS S3 bucket
 1. Locally
 2. Manually on AWS Lambda
 3. Automatically triggered on AWS Lambda
-4. Batch process with the [batcher](NewSpring/batcher)
+4. Batch process with the [batcher](https://github.com/NewSpring/batcher)
 
 ## Local Development
 
@@ -98,7 +98,7 @@ const sourceKey = event.sourceKey || event.Records[0].s3.object.key;
 
 ## Batch Processing
 
-In order to batch process all images in a bucket, use the [batcher](NewSpring/batcher) tool. More info can be found there.
+In order to batch process all images in a bucket, use the [batcher](https://github.com/NewSpring/batcher) tool. More info can be found there.
 
 ## Known Issues
 
