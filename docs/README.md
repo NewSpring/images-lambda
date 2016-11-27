@@ -9,6 +9,12 @@ This project is used for taking an image that already exists in an AWS S3 bucket
 
 ## Local Development
 
+You may need to install ImageMagick if it's not already installed on your machine:
+
+```bash
+brew install imagemagick
+```
+
 After installing the dependencies (`npm install`), you will need to grab you AWS credentials using AWS IAM and place them in `~/.aws/credentials` like this:
 
 ```bash
